@@ -1,0 +1,456 @@
+/**
+ * Virtual Garden Application
+ *
+ * This program allows users to create a virtual garden by selecting and placing flowers.
+ * It provides information about different flowers' environmental impact and helps users make eco-friendly choices.
+ *
+ * Developed by [RUAIRI PATRICK MULHALL]
+ * Student Number [23407336]
+ ___
+ METHODS:
+   Line 295- Final Screen Method
+   Line 261- KeyPressed Method
+   line 237- Mouse Clicked Method
+   Line 291- Mouse released Method
+   Line 203 - Welcome Screen Method
+   Line 97 - draw Method
+   Line 76 - Setup Method
+   Line 378 - Flower Class
+ */
+// ____________________________________________________________________________________________________________________________
+// Enum to represent the program's state
+enum ProgramState {
+  WELCOME, MAIN, FINAL // Welcome, Main, and Final Screens
+}
+
+// Initialize the program state to the welcome screen
+ProgramState state = ProgramState.WELCOME;
+
+// Keep track of every flower to display on the final screen for calculations
+int rose = 0, daisy = 0, sunflower = 0, tulip = 0, lily = 0;
+
+// Arrays to store flower data
+String[] flowerNames = {"Rose", "Daisy", "Sunflower", "Tulip", "Lily"};
+String[] flowerDescriptions = {
+  " Roses in your garden can be beautiful but need extra care and water. \nTo keep things eco-friendly, choose disease-resistant types,\n water wisely, and mix them with native plants.\n(Press 'r' or 'R' to add a Rose to your Garden)",
+  "Daisies are delightful but can be eco-friendly garden\n contributors when combined with native plants,\n promoting biodiversity and attracting pollinators.\n(Press 'd' or 'D' to add a Daisy to your Garden)",
+  "Sunflowers are not only stunning but also have a low environmental impact,\n making them excellent for attracting pollinators and birds while maintaining eco-friendliness.\n(Press 's' or 'S' to add a Sunflower to your Garden)",
+  "Tulips, while popular in gardens, have a moderate environmental impact.\n Consider mixing them with native plants to promote a more sustainable garden.\n(Press 't' or 'T' to add a Tulip to your Garden)",
+  "Lilies, with their elegant appearance, have a moderate environmental impact.\n To enhance the eco-friendliness of your garden, choose lily varieties carefully and consider companion planting.\n(Press 'l' or 'L' to add a Lily to your Garden)"
+};
+
+//Array to store pollinator data
+String[] pollinatorNames = {"bee","butterfly"};
+PImage[] pollinators = new PImage[pollinatorNames.length];
+
+// Variables to control cloud positions
+float cloud1X, cloud2X; 
+
+// Speed at which the clouds move
+float speed = 0.5; 
+
+//Variable to store sun Image
+PImage sunImage;
+
+// Arrays to store flower images
+PImage[] flowers = new PImage[5];
+
+// ArrayList to store the flowers in the garden
+ArrayList<Flower> garden = new ArrayList<Flower>();
+
+// Initialize font and variables for handling flower selection
+PFont font;
+int selectedFlowerIndex = -1;
+
+void setup() {
+  surface.setTitle("The Virtual Garden - Ruairi Mulhall - 23407336");
+  // Set up the canvas size
+  size(1000, 600);
+  font = createFont("Arial", 16);
+  textFont(font);
+  
+  //image of sun 
+  sunImage = loadImage("sun.png");
+  sunImage.resize(200,200);
+  
+  // Load png imagea from Folder
+  for (int i = 0; i < 5; i++) {
+    flowers[i] = loadImage(flowerNames[i].toLowerCase() + ".png");
+    flowers[i].resize(100, 0);
+  }
+  
+  for (int i = 0; i < 2; i++) {
+    String filename = pollinatorNames[i].toLowerCase() + ".png";
+    pollinators[i] = loadImage(filename);
+    pollinators[i].resize(50, 0);
+  }
+  
+  cloud1X = width / 4;
+  cloud2X = width * 3 / 4;
+}
+
+void draw() {
+  if (state == ProgramState.WELCOME) {
+    // Display the welcome screen
+    displayWelcomeScreen();
+  } else if (state == ProgramState.MAIN) {
+    // Draw the garden view
+    // Make Background blue
+    background(135, 206, 235); // Light blue background- sky
+    
+    //add some pollinators
+      float xSpacing = width / (pollinatorNames.length + 1);
+      float y2 = height / 2 + 50;
+
+      for (int i = 0; i < pollinatorNames.length; i++) {
+        float x = (i + 1) * xSpacing;
+        image(pollinators[i], x, y2);
+      }
+      
+    image(sunImage,900,-50);
+    
+    // Draw the grass
+    fill(144, 238, 144); // Green 
+    rect(0, height - 200, width, 200); // Green rectangle to represent the garden
+    
+    //CLOUDS 
+      noStroke(); // remove the black outline from circles
+      fill(255); // white for clouds
+    
+      // Update cloud positions to go back 
+      cloud1X += speed;
+      cloud2X += speed;
+    
+      // Reset cloud positons when theyre past right screen
+      if (cloud1X > width + 50) {
+        cloud1X = -50;
+      }
+      if (cloud2X > width + 50) {
+        cloud2X = -50;
+      }
+    
+      // cloud1
+      ellipse(cloud1X, 150, 60, 60);
+      ellipse(cloud1X + 40, 150, 80, 80);
+      ellipse(cloud1X + 80, 150, 60, 60);
+      ellipse(cloud1X + 60, 170, 60, 60);
+      ellipse(cloud1X + 30, 170, 60, 60);
+    
+      // cloud2
+      ellipse(cloud2X, 180, 60, 60);
+      ellipse(cloud2X + 40, 180, 80, 80);
+      ellipse(cloud2X + 80, 180, 60, 60);
+      ellipse(cloud2X + 60, 200, 60, 60);
+      ellipse(cloud2X + 30, 200, 60, 60);
+    //END OF CLOUDS SECTION
+    
+    //Message for the user to navigate the main screen
+    textAlign(CENTER, TOP);
+    textSize(20);
+    fill(0); // Set the text color to black
+    
+    text("Click on the flower image for information", width/2, 10);
+    text("_____________________________________", width/2, 20 );
+
+    // Load each flower images on screen evenly spaced out 
+    for (int i = 0; i < 5; i++) {
+      float x = 100 + i * 150;
+      float y = 50;
+      image(flowers[i], x, y);
+      
+      if (selectedFlowerIndex == i) {
+        fill(0); // Black text
+        textSize(16);
+        textAlign(CENTER, CENTER);
+        text(flowerDescriptions[i], width / 2, height / 2); // Display information in the middle
+      }
+    }
+
+    // Draw flower images in the garden
+    for (Flower f : garden) {
+      image(f.image, f.x, f.y);
+    }
+
+    // Add a button for finishing  
+    fill(139, 0, 0); // dark red for button
+    rect(width -150, height / 2 + 120, 100, 30);
+    fill(255); // White text
+    textSize(16);
+    textAlign(RIGHT);
+    textSize(28);
+    text("FINISH", width -55, height / 2 + 145);
+    
+  } else if (state == ProgramState.FINAL) {
+    // Display the final screen
+    displayFinalScreen();
+  }
+}
+
+void displayWelcomeScreen() {
+  // Display the welcome screen with instructions
+  background(230, 230, 250); // brown background
+  fill(0); // Black text
+  textSize(26);
+  textAlign(CENTER, LEFT);
+  
+String welcomeMessage = "Welcome to the Virtual Garden\n" +
+  "_____________________________\n" +
+  "Explore five common Irish flowers by clicking on their images at the top.\n " +
+  "Learn about each flower's environmental impact.\n " +
+  "Add a flower to your garden by pressing the associated key (e.g., 'd' for Daisy).\n " +
+  "Click 'Finish' to view your garden's biodiversity rating and more.\n " +
+  "Discover how your plant choices influence the \nenvironment and make eco-friendly decisions.";
+
+  text(welcomeMessage, width / 2, height / 15);
+
+  // See if users mouse is on the button
+  textSize(28);
+  text("Click START to begin:", width / 2, height / 2 + 50);
+  if (mouseX > width / 2 - 50 && mouseX < width / 2 + 50 && mouseY > height / 2 + 70 && mouseY < height / 2 + 100) {
+    fill(139, 0, 0); // Light gray for the button
+    rect(width / 2 - 50, height / 2 + 70, 100, 30);
+    fill(255); // White text
+    text("START", width / 2, height / 2 + 95);
+  } else {
+    fill(255); // White text
+    text("START", width / 2, height / 2 + 95);
+    noFill();
+    rect(width / 2 - 50, height / 2 + 70, 100, 40);
+  }
+}
+
+void mouseClicked() {
+  if (state == ProgramState.WELCOME) {
+    if (mouseX > width / 2 - 50 && mouseX < width / 2 + 50 && mouseY > height / 2 + 70 && mouseY < height / 2 + 100) {
+      // when start button pressed transition to main garden
+      state = ProgramState.MAIN;
+    }
+  } else if (state == ProgramState.MAIN) {
+    // Handle interactions in Main screen
+    for (int i = 0; i < 5; i++) {
+      float x = 100 + i * 150;
+      float y = 50;
+      if (mouseX > x && mouseX < x + flowers[i].width && mouseY > y && mouseY < y + flowers[i].height) {
+        selectedFlowerIndex = i;
+      }
+    }
+    
+    // Handle clicking the FINISH button
+    if (mouseX > width -150 && mouseX < width -50 && mouseY >height / 2 + 90 && mouseY < height / 2 + 145) {
+      // when finish button pressed transition to final screen
+      state = ProgramState.FINAL;
+    }
+  }
+}
+
+void keyPressed() {
+  // If Flower key pressed add that flower to the garden
+  if (state == ProgramState.MAIN) {
+    if (key == 'r' || key == 'R') {
+      addFlower(0); // Rose
+      rose += 1;
+    } else if (key == 'd' || key == 'D') {
+      addFlower(1); // Daisy
+      daisy += 1;
+    } else if (key == 's' || key == 'S') {
+      addFlower(2); // Sunflower
+      sunflower += 1;
+    } else if (key == 't' || key == 'T') {
+      addFlower(3); // Tulip
+      tulip += 1;
+    } else if (key == 'l' || key == 'L') {
+      addFlower(4); // Lily
+      lily += 1;
+    }
+  }
+}
+
+void addFlower(int flowerIndex) {
+  // Add a new flower to the garden at a random position
+  float x = random(width - 100);
+  float y = height - 150;
+  garden.add(new Flower(x, y, flowers[flowerIndex], flowerNames[flowerIndex], flowerDescriptions[flowerIndex]));
+}
+
+void mouseReleased() {
+  selectedFlowerIndex = -1;
+}
+
+void displayFinalScreen() {
+  int totalFlowers = rose + daisy + sunflower + tulip + lily;
+  background(137, 207, 133); // Background
+  fill(0); // Black text
+  textSize(18);
+  textAlign(LEFT, TOP);
+  String finalMessage = "Congratulations! You have finished.\n" +
+    "You selected: " + rose + " Roses.\n" +
+    "You selected: " + daisy + " Daisies.\n" +
+    "You selected: " + sunflower + " Sunflowers.\n" +
+    "You selected: " + tulip + " Tulips.\n" +
+    "You selected: " + lily + " Lilies.\n" +
+    "Total Flowers in garden: " + totalFlowers;
+  text(finalMessage, 20, 20);
+
+  if (totalFlowers == 0) {
+    totalFlowers += 1;
+    String emptyGarden = "You did not select any Flowers.\nPlease try again and use the associated keys\n to add flowers to your garden\n(eg. 'd' for Daisy)";
+    fill(0); // Black text
+    textSize(38);
+    textAlign(CENTER, CENTER);
+    text(emptyGarden, width / 2, height / 2);
+  }else if(totalFlowers>0){
+  strokeWeight(4);  // Set the thickness of the line
+  stroke(139, 69, 19); 
+  line(310, 0, 310, height); // Vertical line at x = 200
+  
+  stroke(139, 69, 19); 
+  line(0, height/2, width, height/2); // Vertical line at x = 200
+  
+  stroke(139, 69, 19); 
+  line(0, height-200, 310, height-200); // Vertical line at x = 200
+  
+  int rosePercent = totalFlowers == 0 ? 0 : (int)((rose * 100.0) / totalFlowers);
+  int tulipPercent = totalFlowers == 0 ? 0 : (int)((tulip * 100.0) / totalFlowers);
+  int sunflowerPercent = totalFlowers == 0 ? 0 : (int)((sunflower * 100.0) / totalFlowers);
+  int daisyPercent = totalFlowers == 0 ? 0 : (int)((daisy * 100.0) / totalFlowers);
+  int lilyPercent = totalFlowers == 0 ? 0 : (int)((lily * 100.0) / totalFlowers);
+  
+  int biodiversityRating = 0;
+  float waterRequirment = 0;
+  
+  // Info about the user's final Garden
+  textSize(18);
+  String info = "Here is some info about your Garden:\n ";
+  // ROSE INFO
+  if (rosePercent > 10 && rosePercent < 18) {
+    info += "1) You are cultivating an environmentally positive quantity of Roses in your garden.\n Well done! Your Garden has " + rosePercent + "% Roses";
+    biodiversityRating += 2;
+    waterRequirment += 0;
+  } else if (rosePercent >= 18) {
+    info += "1) Your Garden is " + rosePercent + "% Roses. Try to reduce the amount of Roses\n in your garden as Roses require a lot care and watering.";
+    biodiversityRating += 1;
+    waterRequirment += 2;
+  } else if (rosePercent < 10) {
+    info += "1) Your Garden is " + rosePercent + "% Roses.";
+    biodiversityRating += 0.5;
+    waterRequirment += 0;
+  }
+  // DAISY INFO
+  if (daisyPercent > 15 && daisyPercent < 25) {
+    info += "\n2) You are cultivating an environmentally positive quantity of Daisies in your garden.\n Well done! Your Garden has " + daisyPercent + "% Daisies";
+    biodiversityRating += 2;
+    waterRequirment += 0.2;
+  } else if (daisyPercent >= 25) {
+    info += "\n2) Your Garden is " + daisyPercent + "% Daisies. Daisies are good pollinators.\n Try to include more biodiversity in your Garden.";
+    biodiversityRating += 1;
+    waterRequirment += 1;
+  } else if (daisyPercent < 15) {
+    info += "\n2) Your Garden is " + daisyPercent + "% Daisies. Daisies are good pollinators.\n Try to include more Daisies next time.";
+    biodiversityRating += 0.5;
+    waterRequirment += 0;
+  }
+  // SUNFLOWER INFO
+  if (sunflowerPercent > 30 && sunflowerPercent < 45) {
+    info += "\n3) You are cultivating an environmentally positive quantity of Sunflowers in your garden.\n Well done! Your Garden has " + sunflowerPercent + "% Sunflowers";
+    biodiversityRating += 2;
+    waterRequirment += 0.2;
+  } else if (sunflowerPercent >= 45) {
+    info += "\n3) Your Garden is " + sunflowerPercent + "% Sunflowers. Sunflowers are good pollinators.\n Try to include more biodiversity in your Garden.";
+    biodiversityRating += 1;
+    waterRequirment += 1.5;
+  } else if (sunflowerPercent < 30) {
+    info += "\n3) Your Garden is " + sunflowerPercent + "% Sunflowers. Sunflowers are good pollinators.\n Try to include more Sunflowers next time.";
+    biodiversityRating += 0.5;
+    waterRequirment += 0;
+  }
+  // LILY INFO
+  if (lilyPercent > 10 && lilyPercent < 18) {
+    info += "\n4) You are cultivating an environmentally positive quantity of Lilies in your garden.\n Well done!Your Garden has " + lilyPercent + "% Lilies";
+    biodiversityRating += 2;
+    waterRequirment += 0;
+  } else if (lilyPercent >= 18) {
+    info += "\n4) Your Garden is " + lilyPercent + "% Lilies. Lilies add beauty to your garden.\n Keep it up!";
+    biodiversityRating += 1;
+    waterRequirment += 1.8;
+  } else if (lilyPercent < 10) {
+    info += "\n4) Your Garden is " + lilyPercent + "% Lilies.";
+    biodiversityRating += 0.5;
+    waterRequirment += 0;
+  }
+  // TULIP INFO
+  if (tulipPercent > 12 && tulipPercent < 20) {
+    info += "\n5) You are cultivating an environmentally positive quantity of Tulips in your garden.\n Well done!Your Garden has " + tulipPercent + "% Tulips";
+    biodiversityRating += 2;
+    waterRequirment += 0;
+  } else if (tulipPercent >= 20) {
+    info += "\n5) Your Garden is " + tulipPercent + "% Tulips. Tulips add color and charm to your garden.\n Keep it up!";
+    biodiversityRating += 1;
+    waterRequirment += 2;
+  } else if (tulipPercent < 12) {
+    info += "\n5) Your Garden is " + tulipPercent + "% Tulips.";
+    biodiversityRating += 0.5;
+    waterRequirment += 0;
+  }
+  
+  if(rose>30){waterRequirment += 4;}
+  
+  String waterMessage = "";
+  if(waterRequirment > 8){
+    waterMessage += "\nYour Garden will\nRequire a lot\nof care and watering";
+  }else if(waterRequirment < 8 && waterRequirment > 4){
+    waterMessage += "\nYour Garden will\nrequire moderate\nwater usage.\nConsider implementing\ndrip irrigation\nor watering in\nthe morning";
+  }else{
+        waterMessage += "\nYou selected a\ngood variety of\ndrought resistant flowers\nwell done!!";
+  }
+  
+  String bioMessage = "";
+  if(biodiversityRating > 8){
+    bioMessage += "You have a good variety of flowers,\n which is positive for the environment \nand will attract pollinators, Well done!";
+  }else if(biodiversityRating < 8 && biodiversityRating > 4){
+    bioMessage += "You have a good variety of flowers,\n which is positive for the environment \nand will attract pollinators, Well done!";
+  }else{
+        bioMessage += "Try to include a greater variety in\n you flower slection next time.";
+  }
+  
+  float overallSustainabilityRating = ((10-waterRequirment) + biodiversityRating) / 2;
+  
+   String sustainabilityMessage = "";
+  if (overallSustainabilityRating > 8) {
+      sustainabilityMessage += "Great job! Your diverse flower selection\npositively impacts the environment\nand attracts pollinators.";
+  } else if (overallSustainabilityRating > 4) {
+      sustainabilityMessage += "Good effort! A variety of flowers contributes\nto a healthier environment and\nattracts important pollinators.";
+  } else {
+      sustainabilityMessage += "Consider diversifying your flower selection\nfor a more eco-friendly garden next time.";
+  }
+
+  text(info, width/3.1,20);
+  text("Biodiversity Rating: " + biodiversityRating + "/10\n" + bioMessage, 5, 310);
+  text("Water Requirment: " + waterRequirment + "/10 " + waterMessage, 10, height - 190);
+  text("Overall Sustainability Rating: " + overallSustainabilityRating + "/10 " + sustainabilityMessage, 320, height/2+20);
+  }
+}
+
+// Define a Flower class to represent the flowers in the garden
+class Flower {
+  float x, y;
+  PImage image;
+  String name;
+  String description;
+
+  Flower(float x, float y, PImage image, String name, String description) {
+    this.x = x;
+    this.y = y;
+    this.image = image;
+    this.name = name;
+    this.description = description;
+
+  }
+}
+/* References 
+1) https://processing.org/reference/tools
+2) Sustainable garden ideas: 28 ways to an eco-friendly garden | (homesandgardens.com)
+3) https://peppershomeandgarden.com/how-much-water-daisies-need/
+4) https://www.thoughtco.com/contrasting-foreground-background-colors-4061363
+5) https://www.toptal.com/game/ultimate-guide-to-processing-the-fundamentals
+6) https://www.gardendesignacademy.ie/blog/sustainable-gardening--how-to-create-an-eco-friendly-outdoor-space
+*/
